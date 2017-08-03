@@ -156,9 +156,9 @@ void jump_task_pool_obj(int fd[2]) {
       close(fd[1]);
       epollfd= Epoll_create(FDSIZE);
       add_event(epollfd, fd[0], EPOLLIN);
+      Setnoblock(fd[0],O_NONBLOCK);
       for(;;){
         //wait pthread
-       
          int cnt=Epoll_wait(epollfd,events,EPOLLEVENTS,-1);
          
          for(i=0;i<cnt;i++){
@@ -170,7 +170,6 @@ void jump_task_pool_obj(int fd[2]) {
                         if(errno==EAGAIN||errno==EWOULDBLOCK){
                            break;
                         }
-                        return (-1);
                      }
                       Setnoblock(clientfd, O_NONBLOCK);
                       struct epoll_event events;
