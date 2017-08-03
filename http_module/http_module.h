@@ -56,13 +56,6 @@ int  accept_request(int epollfd,int socketFd,char *localPath){
     //测试数据解析，读取数据函数协调加
     nread=readline(socketFd,buf,BUFFSIZE);
     
-    //while((readline(socketFd,buffer,BUFFSIZE))!=0);
-     if(nread==0){
-          //end
-           Epoll_ctl(epollfd,EPOLL_CTL_DEL,socketFd,NULL);
-           close(socketFd);
-     }
-    
     while (!isspace(buf[j])&&i<PARTSIZE) {
         method[i++]=buf[j++];
     }
@@ -154,7 +147,7 @@ void response_ok(int sockFd,char pathName[]){
         log_err("010",name);
     
         fclose(localFp);
-        close(sockFd);
+       
 }
 
 

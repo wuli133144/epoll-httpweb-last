@@ -82,7 +82,7 @@ int start(int argc, char **argv)
     while (1)
     {
           
-        int event_cnt = Epoll_wait(epfd, pevent, BUFSIZE, -1);
+         int event_cnt = Epoll_wait(epfd, pevent, BUFSIZE, -1);
          printf("%d",event_cnt);
         for (i = 0; i < event_cnt; i++)
         {
@@ -110,7 +110,7 @@ int start(int argc, char **argv)
                      
                      while((write_cnt=Sock_fd_write(unix_fd[1],buf,2,clientfd))<=0){
                              printf("error ocurred! in sock_fd_write\n");
-                             //Sock_fd_write(unix_fd[1],buf,2,clientfd);
+                             Sock_fd_write(unix_fd[1],buf,2,clientfd);
                        }
                         printf("new connectfd\n");
                    }    
@@ -124,13 +124,12 @@ int start(int argc, char **argv)
                 Epoll_ctl(epfd, EPOLL_CTL_ADD, clientfd, &event);
             }
             else if (pevent[i].events & EPOLLOUT)
-            { //Write
+            { 
             } 
             else
-            {   //default
+            {  
                 free(pevent);
                 close(clientfd);
-                __info();
                 break;
             }
             printf("end\n");
