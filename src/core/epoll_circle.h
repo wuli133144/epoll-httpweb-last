@@ -20,6 +20,14 @@ void sig_int_kill(int sig){
 
 
 static int flag=0;
+int g_count=0;
+
+void sig_handler(int sig){
+      g_count++;
+      printf("gcount=%d\n",g_count);
+      return ;
+
+}  
 
 int start(int argc, char **argv)
 {
@@ -70,15 +78,16 @@ int start(int argc, char **argv)
     /*@epoll @*/
     bzero(buf, BUFSIZE);
     event.data.fd = listenfd;
-    event.events = EPOLLIN|EPOLLET;
+    event.events = EPOLLIN;
     pevent = (struct epoll_event *)Malloc(BUFSIZE * sizeof(struct epoll_event));
-
     epfd = Epoll_create(BUFSIZE);
-    
     Epoll_ctl(epfd, EPOLL_CTL_ADD, listenfd, &event);
     /*@epoll end@*/
-     int g_count=0;
-  
+   
+
+     
+     signal(SIGINT,sig_handler);
+
     while (1)
     {
           
@@ -107,11 +116,11 @@ int start(int argc, char **argv)
                           unix_error("accept error");
                       }
                      
-                       while((write_cnt=Sock_fd_write(unix_fd[1],buf,2,clientfd))<=0){
-                          printf("error ocurred! in sock_fd_write\n");
-                              Sock_fd_write(unix_fd[1],buf,2,clientfd);
-                        }
-                        printf("new connectfd count=%d\n",g_count++);
+                        while((write_cnt=Sock_fd_write(unix_fd[1],buf,2,clientfd))<=0){
+                           printf("error ocurred! in sock_fd_write\n");
+                           Sock_fd_write(unix_fd[1],buf,2,clientfd);
+                         }
+                         printf("new connectfd count=%d\n",g_count++);
 
                    }    
                    

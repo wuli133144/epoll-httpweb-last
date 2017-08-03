@@ -52,7 +52,9 @@ int Epoll_create(int size) {
 int Epoll_ctl(int efd, int op, int fd, struct epoll_event *event) {
   int rval;
   if ((rval = epoll_ctl(efd, op, fd, event)) == -1) {
-    unix_error("epoll_ctl error");
+        //unix_error("epoll_ctl error");
+        perror("epoll_ctl failed");
+        return (-1);
   }
   return rval;
 }
