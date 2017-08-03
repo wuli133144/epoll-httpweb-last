@@ -77,7 +77,7 @@ int start(int argc, char **argv)
     
     Epoll_ctl(epfd, EPOLL_CTL_ADD, listenfd, &event);
     /*@epoll end@*/
-
+     int g_count=0;
   
     while (1)
     {
@@ -100,7 +100,6 @@ int start(int argc, char **argv)
                       
                       clientfd = Accept(listenfd, (struct sockaddr *)&clientsock, (socklen_t *)&client_len);
                       if(clientfd==0){
-                                
                                 printf("none connectfd\n");
                                 break;
                       }else if(clientfd==-1){
@@ -108,11 +107,12 @@ int start(int argc, char **argv)
                           unix_error("accept error");
                       }
                      
-                     while((write_cnt=Sock_fd_write(unix_fd[1],buf,2,clientfd))<=0){
-                             printf("error ocurred! in sock_fd_write\n");
-                             Sock_fd_write(unix_fd[1],buf,2,clientfd);
-                       }
-                        printf("new connectfd\n");
+                       while((write_cnt=Sock_fd_write(unix_fd[1],buf,2,clientfd))<=0){
+                          printf("error ocurred! in sock_fd_write\n");
+                              Sock_fd_write(unix_fd[1],buf,2,clientfd);
+                        }
+                        printf("new connectfd count=%d\n",g_count++);
+
                    }    
                    
                    printf("up\n");
@@ -130,7 +130,7 @@ int start(int argc, char **argv)
             {  
                 free(pevent);
                 close(clientfd);
-                break;
+                
             }
             printf("end\n");
         }

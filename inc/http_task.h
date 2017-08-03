@@ -157,63 +157,65 @@ void jump_task_pool_obj(int fd[2]) {
       epollfd= Epoll_create(FDSIZE);
       add_event(epollfd, fd[0], EPOLLIN);
       Setnoblock(fd[0],O_NONBLOCK);
+      int gate=0;
       for(;;){
         //wait pthread
-         int cnt=Epoll_wait(epollfd,events,EPOLLEVENTS,-1);
          
+         int cnt=Epoll_wait(epollfd,events,EPOLLEVENTS,-1);
+         printf("COUNT=%d\n",cnt);
          for(i=0;i<cnt;i++){
+                
                  fd_set=events[i].data.fd;
-                 if(fd_set==fd[0]&&EPOLLIN){
-                   //note:add clientfd
+                 if(fd_set==fd[0]&&(EPOLLIN&events[i].events)){
+                    //note:add clientfd
                      int readfd=Sock_fd_read(fd[0],buf,2,&clientfd);
                      if(readfd<0){
                         if(errno==EAGAIN||errno==EWOULDBLOCK){
                            break;
                         }
                      }
-                      Setnoblock(clientfd, O_NONBLOCK);
+                       printf("new clientfd%d\n",gate++);
+                     
                       struct epoll_event events;
                       events.data.fd=clientfd; 
                       events.events=EPOLLIN|EPOLLET;
+                      Setnoblock(clientfd,O_NONBLOCK);
                       
                       Epoll_ctl(epollfd,EPOLL_CTL_ADD,clientfd,&events);
-                 }else {
-                    //request
-                   if(events[i].events&EPOLLIN){
+                 }else  
+                 { 
+                    if(events[i].events&EPOLLIN){
                              if(clientfd==fd_set){//clientfd read
                                   info_t *info=http_module_handler_request(epollfd,(void *)&clientfd);
                                   struct epoll_event events1;
                                   events1.data.fd=clientfd; 
-                                  events1.events=EPOLLOUT;
+                                  events1.events=EPOLLOUT|EPOLLET;
                                   events1.data.ptr=(void *)info;
                                   Epoll_ctl(epollfd,EPOLL_CTL_MOD,clientfd,&events1);    
-                                        
-                             }
-                 }
-                 else if(events[i].events&EPOLLOUT&&events[i].data.fd==clientfd){
+                                  printf("HTTP_HANDLER END!\n");
                                   
+                             }
+                    }else if(events[i].events&EPOLLOUT&&clientfd==fd_set){
+                                  __info();
                                   info_t *info=(info_t *)events[i].data.ptr;
                                   int err=info->errtype;
                                   char filename[BUFFSIZE];
                                   bzero(filename,BUFFSIZE);
+                                 
                                   strcpy(filename,info->filename);
-                                  
+                                  printf("filename out=%s\n",filename);
                                   http_module_handler_response(filename,clientfd,err);
                                   close(clientfd);
+                                  Epoll_ctl(epollfd,EPOLL_CTL_DEL,clientfd,NULL);
+                                  break;
                                  
-                 }
-
-                 }
-
+                    }
+              }
          }
     
       }
      
-        
-       
-
-     
-           
+                  
 }
 
 /*@child proc handler proc@*/

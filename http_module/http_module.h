@@ -112,8 +112,8 @@ void response_ok(int sockFd,char pathName[]){
     FILE *localFp;
     unsigned long num;
     char *name;
-    
-    
+
+
     localFp=fopen(pathName, "rb");
     stat(pathName, &st);
     iDataNum=st.st_size;
@@ -125,7 +125,7 @@ void response_ok(int sockFd,char pathName[]){
         sprintf(buf,"HTTP/1.0 200 OK \r\n");
         send(sockFd,buf,strlen(buf),0);
         sprintf(buf,"Content-Length: %ld\r\n",iDataNum);
-        //printf("num is %ld\n",iDataNum);
+        printf("num is %ld\n",iDataNum);
         send(sockFd,buf,strlen(buf),0);
         sprintf(buf,"Content-Type: application/octet-stream\r\n");
         send(sockFd,buf,strlen(buf),0);
@@ -463,12 +463,8 @@ void http_module_handler_response( char *filename,int clientfd,int flag)
            int read_cnt,write_cnt;
            char buf[BUFFSIZE];
            bzero(buf,BUFFSIZE);
-           if(flag==HTTP_SUCCESS||flag==0){
-               if(filename!=NULL)
-                   fd=open(filename,O_RDWR);
+           if(flag==HTTP_SUCCESS){
             response_ok(clientfd,filename);
-              
-
            }else if(flag==HTTP_ERROR_NOT_FIND){
                    unknow(clientfd);
                    
@@ -478,7 +474,7 @@ void http_module_handler_response( char *filename,int clientfd,int flag)
                  //
                  wrong_path(clientfd);
            }
-           close(fd);
+          
 }
 
 // /*@getfiletype@*/
