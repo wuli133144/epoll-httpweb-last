@@ -44,7 +44,7 @@ extern void http_module_error(FILE *arg);
 
 
 static int first_gate=0;
-int  accept_request(int socketFd,char *localPath){
+int  accept_request(int epollfd,int socketFd,char *localPath){
     char buf[BUFFSIZE];
     char buffer[BUFFSIZE];
 
@@ -57,11 +57,11 @@ int  accept_request(int socketFd,char *localPath){
     nread=readline(socketFd,buf,BUFFSIZE);
     
     //while((readline(socketFd,buffer,BUFFSIZE))!=0);
-    if(nread==0){
-         //end
-         Epoll_ctl(epollfd,EPOLL_CTL_DEL,socketFd,NULL);
-         close(clientfd);
-    }
+     if(nread==0){
+          //end
+           Epoll_ctl(epollfd,EPOLL_CTL_DEL,socketFd,NULL);
+           close(socketFd);
+     }
     
     while (!isspace(buf[j])&&i<PARTSIZE) {
         method[i++]=buf[j++];
@@ -417,7 +417,7 @@ static ssize_t readline(int fd,void *buf,size_t maxlen){
       zero_to_buffer(filename);
       zero_to_buffer(method);
       zero_to_buffer(content_type);
-      ret_errno=accept_request(clientfd,filename);
+      ret_errno=accept_request(epollfd,clientfd,filename);
       
        printf("ret_errno=%dfilename=%s\n",ret_errno,filename);
        

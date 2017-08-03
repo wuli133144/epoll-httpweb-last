@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "http_module_error.c": "cpp",
+        "http_module.c": "cpp"
+    }
+}
