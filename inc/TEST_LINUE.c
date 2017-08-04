@@ -35,9 +35,9 @@ int readline_buf(char **buf,char *usr,size_t maxlen){
             }
             len1=strlen(*buf);
             len2=maxlen;
-            (*buf)+=strspn(*buf," ");
            
-            maxlen=len2>len1?len2:len1;
+           
+            maxlen=len2<len1?len2:len1;
            
              usr[0]=*(*buf);  
             for(i=1;i<maxlen;i++){
@@ -64,36 +64,37 @@ int readline_buf(char **buf,char *usr,size_t maxlen){
             
 }
 
-void * analasy(const char *buffer){
+void * analasy(char *buffer){
              
              char buf[BUFSIZE];
              bzero(buf,BUFSIZE);
              
+             char cpstr[BUFSIZE];
+             strcpy(cpstr,buffer);
              int i=0;
              
              if(strstr(buffer,"\r\n\r\n")==NULL){/*If null buf is nut full*/
                  return NULL;
-             }
+             } 
             
-             char *cpstr=strdup(buffer);
+             http_request *req=(http_request *)malloc(sizeof(http_request));
             
-            // http_request *req=(http_request *)malloc(sizeof(http_request));
+              readline_buf(&scpstr,buf,BUFSIZE);
+             // printf("%s",buf);
+                   //strcpy(req->method,strtok(buf," "));
+                    // printf("%s ",req->method);
+                  //         strcpy(req->url,strtok(NULL," "));
+                  //          printf("%s ",req->url);
+                  //         strcpy(req->version,strtok(NULL," "));
+                  //          printf("%s ",req->version);
              
-            //  if((readline_buf(&cpstr,buf,BUFSIZE))!=0){
-            //         strcpy(req->method,strtok(buf," "));
-            //         printf("%s ",req->method);
-            //         strcpy(req->url,strtok(NULL," "));
-            //          printf("%s ",req->url);
-            //         strcpy(req->version,strtok(NULL," "));
-            //          printf("%s ",req->version);
-            //  }
              bzero(buf,BUFSIZE);
             //   while((readline_buf(&cpstr,buf,BUFSIZE))!=0){
             //          strcpy(req->contain[i].name,strtok(buf,":"));
             //          strcpy(req->contain[i].value,strtok(NULL,":"));
             //          i++;
             //  }
-             free(cpstr);
+           
              return NULL ;
 }
 
@@ -103,9 +104,26 @@ int main(){
 
     char *m="GET / HTTP/1.1\r\nHost: www.baidu.com\r\nUser-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.6)\r\n\r\n";
     char buf[BUFSIZE];
+    int i=0;
     bzero(buf,BUFSIZE);
+   char *str=strdup(m);
+   readline_buf(&str,buf,BUFSIZE);
+
     
-   // analasy(m);
+    http_request *req=(http_request *)malloc(sizeof(http_request));
+    strcpy(req->method,strtok(buf," "));
+    printf(req->method);
+    strcpy(req->url,strtok(NULL," "));
+    printf("%s\n ",req->url);
+    strcpy(req->version,strtok(NULL," "));
+    printf("%s ",req->version);
+    
+    //    while((readline_buf(&str,buf,BUFSIZE))!=0){
+    //                  strcpy(req->contain[i].name,strtok(buf,":"));
+    //                  strcpy(req->contain[i].value,strtok(NULL,":"));
+    //                  i++;
+    //          }
+   //analasy(m);
 
     return 0;
 }

@@ -6,6 +6,7 @@
 #include "../inc/http_config.h"
 #include "../utils/utils.h"
 #include "../inc/log.h"
+#include "../inc/http_types.h"
 
 ///////////////////////
 
@@ -54,7 +55,7 @@ int  accept_request(char *localPath){
     int i=0,j=0;
     int nread=0;
     //测试数据解析，读取数据函数协调加
-    nread=readline(socketFd,buf,BUFFSIZE);
+   strcpy(buf,localPath);
     
     while (!isspace(buf[j])&&i<PARTSIZE) {
         method[i++]=buf[j++];
@@ -413,7 +414,7 @@ static ssize_t readline(int fd,void *buf,size_t maxlen){
       zero_to_buffer(filename);
       zero_to_buffer(method);
       zero_to_buffer(content_type);
-      ret_errno=accept_request(epollfd,clientfd,filename);
+      ret_errno=accept_request(filename);
       printf("ret_errno=%dfilename=%s\n",ret_errno,filename);
       info_t *pinfo=(info_t *)malloc(sizeof(info_t));
       strcpy(pinfo->filename,filename);
