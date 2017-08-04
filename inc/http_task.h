@@ -7,6 +7,7 @@
 #include "http_error.h"
 #include "http_epoll.h"
 #include "sys/wait.h"
+#include "http_types.h"
 #include <sys/resource.h>
 #include <pthread.h>
 #include <err.h>
@@ -175,7 +176,9 @@ void jump_task_pool_obj(int fd[2]) {
                       }
                        struct epoll_event events;
                        events.data.fd=clientfd; 
-                       events.events=EPOLLIN|EPOLLET;
+                       events.events=EPOLLIN;
+                       events.data.ptr=(void *)http_tcp_alloc(clienfd);
+
                        Setnoblock(clientfd,O_NONBLOCK);
                        Epoll_ctl(epollfd,EPOLL_CTL_ADD,clientfd,&events);
 
@@ -185,38 +188,40 @@ void jump_task_pool_obj(int fd[2]) {
                  { 
                     if(events[i].events&EPOLLIN){
                                    /*clientfd readable*/
-                                  
-                                    info_t *info=http_module_handler_request(epollfd,(void *)&clientfd);
-                                    struct epoll_event events1;
+                                    
+                                    //info_t *info=http_module_handler_request(epollfd,(void *)&clientfd);
+                               if(fd_set==clientfd){
+                                    void *ptr=events[i].data.ptr;
+                                    int newfd=events[i].data.fd;
+                                    http_tcp *tcp=(http_tcp *)ptr;
+                                    /*core handler*/
+                                    http_request *req=tcp->callback(tcp->http_contxt,\
+                                                  onRecv,tcp->fd,                    \
+                                                  (char *)tcp->buf,READ_COUNT);
+                                     
+                                     if(req==NULL){
+                                          break;
+                                     }
+                                    struct epoll_event events;
                                     events1.data.fd=clientfd; 
-                                    events1.events=EPOLLOUT|EPOLLET;
-                                    events1.data.ptr=(void *)info;
+                                    events1.events=EPOLLOUT;
+                                    events1.data.ptr=(void *)req;
                                     Epoll_ctl(epollfd,EPOLL_CTL_MOD,clientfd,&events1);    
-                                    printf("HTTP_HANDLER END!\n");
+                                  
+                                    }
                                   
                              
                     }else if(events[i].events&EPOLLOUT){
                                   /*clientfd writeable*/
+                                  http_request *req=(http_request *)events[i].data.ptr;
                                   
-                                  info_t *info=(info_t *)events[i].data.ptr;
-                                  int err=info->errtype;
-                                  char filename[BUFFSIZE];
-                                  bzero(filename,BUFFSIZE);
-                                  strcpy(filename,info->filename);
-                                  printf("filename out=%s\n",filename);
-                                  http_module_handler_response(filename,clientfd,err);
-                                  //int ret=Epoll_ctl(epollfd,EPOLL_CTL_DEL,clientfd,NULL);
-                                  // if(ret==-1){
-                                  //      goto err;
-                                  // }
-                                  // err:
-                                     close(clientfd);
-                                  
-                                  
+                                  http_module_handler_response(req,events[i].data.fd);
+                                  close(events[i].data.fd);
+                                
                                 }else{
                                   Epoll_ctl(epollfd,EPOLL_CTL_DEL,fd[0],NULL);
                                   close(fd[0]);
-                                }
+                           }
                     
                     }
               }

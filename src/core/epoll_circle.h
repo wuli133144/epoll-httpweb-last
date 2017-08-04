@@ -7,13 +7,12 @@
 
 
 void sig_quit(int sig){
-    //destroy_queue();
     exit(0);
     return ;
+    
 }
 
 void sig_int_kill(int sig){
-       // destroy_queue();
         exit(0);
         return ;
 }
@@ -74,7 +73,6 @@ int start(int argc, char **argv)
     listenfd = open_listenfd("127.0.0.1", "8080");
     Setnoblock(listenfd, O_NONBLOCK);
     /*@get socket filefd end@*/
-
     /*@epoll @*/
     bzero(buf, BUFSIZE);
     event.data.fd = listenfd;
@@ -83,11 +81,8 @@ int start(int argc, char **argv)
     epfd = Epoll_create(BUFSIZE);
     Epoll_ctl(epfd, EPOLL_CTL_ADD, listenfd, &event);
     /*@epoll end@*/
+
    
-
-     
-     signal(SIGINT,sig_handler);
-
     while (1)
     {
           

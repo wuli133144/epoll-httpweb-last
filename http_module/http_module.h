@@ -25,7 +25,7 @@ typedef struct _context{
 
 /*@http handler start@*/
 extern info_t * http_module_handler_request(int epollfd,void *arg);
-extern void http_module_handler_response(char *filename, int fd,int arg);
+extern void http_module_handler_response(http_request *req,int clientfd);
 extern void http_module_error(FILE *arg);
 
  static ssize_t readline(int fd,void *buf,size_t maxlen);
@@ -44,7 +44,7 @@ extern void http_module_error(FILE *arg);
 
 
 static int first_gate=0;
-int  accept_request(int epollfd,int socketFd,char *localPath){
+int  accept_request(char *localPath){
     char buf[BUFFSIZE];
     char buffer[BUFFSIZE];
 
@@ -70,17 +70,17 @@ int  accept_request(int epollfd,int socketFd,char *localPath){
     }
     url[i]='\0';//读取出网络路径
     printf("%s\n",url);
-    __info();
+  
 
     if (strcasecmp(method, "GET") && strcasecmp(method, "POST"))
     {
         printf("not post and get \n");
         // error : 5
-        __info();
+       
         localPath=NULL;
         return HTTP_ERROR_METHOD;
     }
-    __info();
+   
     sprintf(localPath, "/home/jackwu/Desktop/test%s", url); //获取本地路径，加上本地前缀
     if(localPath[strlen(localPath)-1]=='/'){
         strcat(localPath, "index.html");
@@ -161,6 +161,8 @@ void unknow(int sockfd){
     http_send(sockfd,buf,strlen(buf));
     sprintf(buf,"Content-Type: text/html\r\n");
     http_send(sockfd,buf,strlen(buf));
+    sprintf(buf, "Connection: close\r\n");
+    send(sockfd, buf, strlen(buf), 0);
     sprintf(buf,"\r\n");
     http_send(sockfd,buf,strlen(buf));
     sprintf(buf, "<HTML><TITLE>Not Found</TITLE>\r\n");
@@ -173,6 +175,7 @@ void unknow(int sockfd){
     http_send(sockfd, buf, strlen(buf));
     sprintf(buf, "</BODY></HTML>\r\n");
     http_send(sockfd, buf, strlen(buf));
+   
 }
 
 
@@ -199,6 +202,7 @@ void error_method(int sockfd)
     send(sockfd, buf, strlen(buf),0);
     sprintf(buf, "</BODY></HTML>\r\n");
     send(sockfd, buf, strlen(buf),0);
+    
 }
 
 void bad_request(int sockfd)
@@ -313,7 +317,6 @@ static ssize_t  http_rcv(int fd,void *buf,size_t len){
            nleft-=nread;// socket buffer
            cur_ptr+=nread;               
        }
-
        return (cur_ptr-buf);
 }
 
@@ -411,60 +414,35 @@ static ssize_t readline(int fd,void *buf,size_t maxlen){
       zero_to_buffer(method);
       zero_to_buffer(content_type);
       ret_errno=accept_request(epollfd,clientfd,filename);
-      
-       printf("ret_errno=%dfilename=%s\n",ret_errno,filename);
-       
-       info_t *pinfo=(info_t *)malloc(sizeof(info_t));
-      
-       strcpy(pinfo->filename,filename);
-       
-       pinfo->errtype=ret_errno;
+      printf("ret_errno=%dfilename=%s\n",ret_errno,filename);
+      info_t *pinfo=(info_t *)malloc(sizeof(info_t));
+      strcpy(pinfo->filename,filename);
+      pinfo->errtype=ret_errno;
      
        return pinfo;
-    //    switch(ret_errno){
-    //       case HTTP_ERROR_METHOD:{
-    //           __info();
-    //           http_module_handler_response(filename,clientfd,HTTP_ERROR_METHOD);
-    //           __info();
-    //           break;
-    //       }
-    //       case HTTP_SUCCESS:{
-    //            http_module_handler_response(filename,clientfd,HTTP_SUCCESS);
-    //            break;
-    //       }
-    //       case HTTP_ERROR_NOT_FIND:{
-    //           http_module_handler_response(filename,clientfd,HTTP_ERROR_NOT_FIND);
-    //             break;
-    //       }
-    //       case HTTP_ERROR_REQUEST:{
-    //              http_module_handler_response(filename,clientfd,HTTP_ERROR_REQUEST);
-    //              break;
-    //       }
-    //       default:{
-    //             break;
-    //       }
-    //    }
-
-    //    __info();
 
 }
-/*http handler*/
 
+/*http handler*/
 /*
 HTTP/1.1 200 OK
 Date: Sat, 31 Dec 2005 23:59:59 GMT
 Content-Type: text/html;charset=ISO-8859-1
 Content-Length: 12
 */
+/*geterror_type find error type example 404 200*/
+int geterror_type(http_request *req){
+         return accept_request(req->url);
+}
 
-void http_module_handler_response( char *filename,int clientfd,int flag)
-{
-           int fd;
-           int read_cnt,write_cnt;
-           char buf[BUFFSIZE];
-           bzero(buf,BUFFSIZE);
+void http_module_handler_response( http_request *req,int clientfd)
+{    
+            
+           int flag=geterror_type(req);
+           char *filename=req->url;
+
            if(flag==HTTP_SUCCESS){
-            response_ok(clientfd,filename);
+                 response_ok(clientfd,filename);
            }else if(flag==HTTP_ERROR_NOT_FIND){
                    unknow(clientfd);
                    
@@ -477,18 +455,6 @@ void http_module_handler_response( char *filename,int clientfd,int flag)
           
 }
 
-// /*@getfiletype@*/
-// char *Get_file_type(char *filename)
-// {
-//       if (filename == NULL)
-//       {
-//             return NULL;
-//       }
-//       char ex[BUFSIZE];
-//       zero_to_buffer(ex);
-//       SCPY(ex, strtok(filename, "."));
-//       return ex;
-// }
 
 /*@getfiletype end@*/
 /*

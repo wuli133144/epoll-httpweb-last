@@ -13,7 +13,6 @@
 #define zero_to_buffer(buf) bzero(buf, sizeof(buf))
 
 
-
 #define error_msg(fmt, ...) \
     fprintf(stderr,"[%s:%s:%d][error %d:%s]" fmt "\r\n",\
          __FILE__, __func__, __LINE__, errno, strerror(errno),##__VA_ARGS__)
